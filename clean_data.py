@@ -36,24 +36,27 @@ def nan2num_samp(CTG_features, extra_feature):
     """
     c_cdf = {}
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
-    # replace all non alphanumeric character to nan:
+    # replace all non-numeric character to nan:
     CTG_clean_features = CTG_features.replace(regex=r'\D', value=np.nan)
 
     # create a dictionary without nan values:
     c_ctg = rm_ext_and_nan(CTG_features, extra_feature)
+
+    # create a dictionary with random values (from relevant distribution p) instead of NaN
     for key in c_ctg.keys():
         # # calculate the probability of each element
-        # p = []
-        # p += [(c_ctg[key].count(val) / len(c_ctg[key])) for val in c_ctg[key]]
         p_dict = {val: (c_ctg[key].count(val) / len(c_ctg[key])) for val in c_ctg[key]}
 
-        # find all nan values and replace then randomly:
+        # find all nan values' indexes and replace them randomly:
         val = CTG_clean_features[key].to_list()
         idx_na = []
         idx_na += [i for i in range(len(val)) if pd.isna(val[i])]
         for i in idx_na:
+            # np.fromiter converts dict keys/vals into iterable array
             val[i] = np.random.choice(np.fromiter(p_dict.keys(), dtype=float),
                                       p=np.fromiter(p_dict.values(), dtype=float))
+
+        # insert key and vals to dict
         c_cdf[key] = val
 
     # -------------------------------------------------------------------------
@@ -64,10 +67,12 @@ def sum_stat(c_feat):
     """
 
     :param c_feat: Output of nan2num_cdf
-    :return: Summary statistics as a dicionary of dictionaries (called d_summary) as explained in the notebook
+    :return: Summary statistics as a dictionary of dictionaries (called d_summary) as explained in the notebook
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
     d_summary = {}
+
+    # calculating each key description as dict
     for key in c_feat.keys():
         dict_temp = {}
         values_arr = c_feat[key].to_numpy()
@@ -77,6 +82,7 @@ def sum_stat(c_feat):
         dict_temp["Q3"] = np.quantile(values_arr, 0.75)
         dict_temp["max"] = np.max(values_arr)
 
+        # insert key description (dict) to d_summary (dict)
         d_summary[key] = dict_temp
     # -------------------------------------------------------------------------
     return d_summary
@@ -91,6 +97,18 @@ def rm_outlier(c_feat, d_summary):
     """
     c_no_outlier = {}
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
+    for key in c_feat.keys():
+        # Calculating Upper/Lower Whiskers (UW/LW)
+        Q1 = d_summary[key]['Q1']
+        Q3 = d_summary[key]['Q3']
+        LW = Q1 - 1.5*(Q3-Q1)
+        UW = Q3 + 1.5*(Q3-Q1)
+
+        # insert val if within whiskers, rest are replaced with NaN
+        temp_val = [val if LW < val < UW else np.nan for val in c_feat[key]]
+
+        # create dict without outliers
+        c_no_outlier[key] = temp_val
 
     # -------------------------------------------------------------------------
     return pd.DataFrame(c_no_outlier)
@@ -128,7 +146,8 @@ def norm_standard(CTG_features, selected_feat=('LB', 'ASTV'), mode='none', flag=
 
 ######## Debug
 import os
-directory = r'C:\Users\hadas\Documents\OneDrive - Technion\semester_7\Machine learning in healthcare\Hw\HW1'
+# directory = r'C:\Users\hadas\Documents\OneDrive - Technion\semester_7\Machine learning in healthcare\Hw\HW1'
+directory = r'C:\Users\Nathan\PycharmProjects\ML_in_Healthcare_Winter2021\HW1'
 CTG_dataset_filname = os.path.join(directory, 'messed_CTG.xls')
 CTG_dataset = pd.read_excel(CTG_dataset_filname, sheet_name='Raw Data').iloc[1:,:]
 CTG_features = CTG_dataset[['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
