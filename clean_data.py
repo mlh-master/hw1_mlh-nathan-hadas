@@ -17,17 +17,10 @@ def rm_ext_and_nan(CTG_features, extra_feature):
     :return: A dictionary of clean CTG called c_ctg
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
-    # for feat, val in enumerate(CTG_features):
-    #     if not CTG_features[feat][val].isdigit():
-    #         CTG_features.replace(val, np.nan)
-
-
-    # cc_ctg = {}
-    # for key in CTG_features.keys():
-    #     if not key == extra_feature:
-    #         cc_ctg[key] = [val for val in CTG_features[key] if not pd.isnull(val)]
-
-    c_ctg = {key: [val for val in CTG_features[key] if not pd.isna(val)] for key in CTG_features.keys() if
+    # regular expressions \D = replace all non 0-9 character; this is equivalent to the class [^0-9]
+    # regex = Whether to interpret to_replace and/or value as regular expressions.
+    CTG_clean_features = CTG_features.replace(regex=r'\D', value=np.nan)
+    c_ctg = {key: [val for val in CTG_clean_features[key] if not pd.isna(val)] for key in CTG_clean_features.keys() if
              not key == extra_feature}
 
     # --------------------------------------------------------------------------
@@ -43,15 +36,24 @@ def nan2num_samp(CTG_features, extra_feature):
     """
     c_cdf = {}
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
-    CTG_features = CTG_features.replace('--', np.nan)
+    # replace all non alphanumeric character to nan:
+    CTG_clean_features = CTG_features.replace(regex=r'\D', value=np.nan)
 
+    # create a dictionary without nan values:
     c_ctg = rm_ext_and_nan(CTG_features, extra_feature)
     for key in c_ctg.keys():
-        p_hist = np.histogram(c_ctg[key], 100, density=True)
-        val = pd.DataFrame(CTG_features[key])
-        idx_na = val.index[val[key].isna()].tolist()
+        # # calculate the probability of each element
+        # p = []
+        # p += [(c_ctg[key].count(val) / len(c_ctg[key])) for val in c_ctg[key]]
+        p_dict = {val: (c_ctg[key].count(val) / len(c_ctg[key])) for val in c_ctg[key]}
+
+        # find all nan values and replace then randomly:
+        val = CTG_clean_features[key].to_list()
+        idx_na = []
+        idx_na += [i for i in range(len(val)) if pd.isna(val[i])]
         for i in idx_na:
-            val.loc[i] = np.random.choice(c_ctg[key], p = p_hist)
+            val[i] = np.random.choice(np.fromiter(p_dict.keys(), dtype=float),
+                                      p=np.fromiter(p_dict.values(), dtype=float))
         c_cdf[key] = val
 
     # -------------------------------------------------------------------------
@@ -65,7 +67,17 @@ def sum_stat(c_feat):
     :return: Summary statistics as a dicionary of dictionaries (called d_summary) as explained in the notebook
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
+    d_summary = {}
+    for key in c_feat.keys():
+        dict_temp = {}
+        values_arr = c_feat[key].to_numpy()
+        dict_temp["min"] = np.min(values_arr)
+        dict_temp["Q1"] = np.quantile(values_arr, 0.25)
+        dict_temp["median"] = np.median(values_arr)
+        dict_temp["Q3"] = np.quantile(values_arr, 0.75)
+        dict_temp["max"] = np.max(values_arr)
 
+        d_summary[key] = dict_temp
     # -------------------------------------------------------------------------
     return d_summary
 
@@ -112,3 +124,15 @@ def norm_standard(CTG_features, selected_feat=('LB', 'ASTV'), mode='none', flag=
 
     # -------------------------------------------------------------------------
     return pd.DataFrame(nsd_res)
+
+
+######## Debug
+import os
+directory = r'C:\Users\hadas\Documents\OneDrive - Technion\semester_7\Machine learning in healthcare\Hw\HW1'
+CTG_dataset_filname = os.path.join(directory, 'messed_CTG.xls')
+CTG_dataset = pd.read_excel(CTG_dataset_filname, sheet_name='Raw Data').iloc[1:,:]
+CTG_features = CTG_dataset[['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
+                            'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']]
+extra_feature = 'DR'
+CTG_morph = CTG_dataset[['CLASS']]
+fetal_state = CTG_dataset[['NSP']]
