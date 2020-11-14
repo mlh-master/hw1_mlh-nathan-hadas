@@ -17,6 +17,18 @@ def rm_ext_and_nan(CTG_features, extra_feature):
     :return: A dictionary of clean CTG called c_ctg
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
+    # for feat, val in enumerate(CTG_features):
+    #     if not CTG_features[feat][val].isdigit():
+    #         CTG_features.replace(val, np.nan)
+
+
+    # cc_ctg = {}
+    # for key in CTG_features.keys():
+    #     if not key == extra_feature:
+    #         cc_ctg[key] = [val for val in CTG_features[key] if not pd.isnull(val)]
+
+    c_ctg = {key: [val for val in CTG_features[key] if not pd.isna(val)] for key in CTG_features.keys() if
+             not key == extra_feature}
 
     # --------------------------------------------------------------------------
     return c_ctg
@@ -31,6 +43,16 @@ def nan2num_samp(CTG_features, extra_feature):
     """
     c_cdf = {}
     # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
+    CTG_features = CTG_features.replace('--', np.nan)
+
+    c_ctg = rm_ext_and_nan(CTG_features, extra_feature)
+    for key in c_ctg.keys():
+        p_hist = np.histogram(c_ctg[key], 100, density=True)
+        val = pd.DataFrame(CTG_features[key])
+        idx_na = val.index[val[key].isna()].tolist()
+        for i in idx_na:
+            val.loc[i] = np.random.choice(c_ctg[key], p = p_hist)
+        c_cdf[key] = val
 
     # -------------------------------------------------------------------------
     return pd.DataFrame(c_cdf)
