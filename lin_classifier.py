@@ -19,6 +19,12 @@ def pred_log(logreg, X_train, y_train, X_test, flag=False):
     :return: A two elements tuple containing the predictions and the weightning matrix
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
+    # X_train_scaled = nsd(X_train, selected_feat=('LB', 'ASTV'), mode='standard', flag=False)
+    # X_test_scaled = nsd(X_test, mode='standard')
+    # CHECK IF NEED TO STANDARDIZE HERE OR NOT!
+    logreg.fit(X_train, y_train)    # fit model to data
+    y_pred_log = logreg.predict(X_test)  # ToDo: ask what kind of predict (predict VS. predict_proba)
+    w_log = logreg.coef_
 
     # -------------------------------------------------------------------------
     return y_pred_log, w_log
@@ -98,7 +104,13 @@ def odds_ratio(w, X, selected_feat='LB'):
              odds_ratio: the odds ratio of the selected feature and label
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
+    idx = list(X.keys()).index(selected_feat)
+    log_odds = np.dot(w[:, idx].reshape(-1, 1), X[selected_feat].to_numpy().reshape(1, -1))
+    odds = np.median(np.exp(log_odds[0, :]))
 
+    w_selected_feat = w[:, idx]
+    w_selected_norm = w_selected_feat[0]
+    odd_ratio = np.exp(w_selected_norm)
     # --------------------------------------------------------------------------
 
     return odds, odd_ratio
