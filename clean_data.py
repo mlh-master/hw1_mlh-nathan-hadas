@@ -101,8 +101,8 @@ def rm_outlier(c_feat, d_summary):
         # Calculating Upper/Lower Whiskers (UW/LW)
         Q1 = d_summary[key]['Q1']
         Q3 = d_summary[key]['Q3']
-        LW = Q1 - 1.5*(Q3-Q1)
-        UW = Q3 + 1.5*(Q3-Q1)
+        LW = Q1 - 1.5 * (Q3 - Q1)
+        UW = Q3 + 1.5 * (Q3 - Q1)
 
         # insert val if within whiskers, rest are replaced with NaN
         temp_val = [val if LW < val < UW else np.nan for val in c_feat[key]]
@@ -123,7 +123,7 @@ def phys_prior(c_cdf, feature, thresh):
     :return: An array of the "filtered" feature called filt_feature
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
-
+    filt_feature = [val for val in c_cdf[feature] if val < thresh]
     # -------------------------------------------------------------------------
     return filt_feature
 
@@ -138,20 +138,84 @@ def norm_standard(CTG_features, selected_feat=('LB', 'ASTV'), mode='none', flag=
     :return: Dataframe of the normalized/standardazied features called nsd_res
     """
     x, y = selected_feat
-    # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
 
+    # ------------------ IMPLEMENT YOUR CODE HERE:------------------------------
+    # create function to normalized/standardized according to each mode:
+    def StandardizationScaling(value, key, d_statistics):
+        standard_val = (value - d_statistics[key]['mean']) / d_statistics[key]["std"]
+        return standard_val
+
+    def MinMaxScaling(value, key, d_statistics):
+        standard_val = (value - d_statistics[key]['min']) / (d_statistics[key]['max'] - d_statistics[key]['min'])
+        return standard_val
+
+    def MeanNormalization(value, key, d_statistics):
+        standard_val = (value - d_statistics[key]['mean']) / (d_statistics[key]['max'] - d_statistics[key]['min'])
+        return standard_val
+
+    # get statistic:
+    d_statistics = CTG_features.describe()
+
+    # create dictionary for the scaling val:
+    nsd_res = {}
+    for key in CTG_features.keys():
+        nsd_res[key] = [val for val in CTG_features[key]]
+    if mode == 'mean':
+        nsd_res = {key: [MeanNormalization(val, key, d_statistics) for val in CTG_features[key]]
+                   for key in CTG_features.keys()}
+    if mode == 'standard':
+        nsd_res = {key: [StandardizationScaling(val, key, d_statistics) for val in CTG_features[key]]
+                   for key in CTG_features.keys()}
+
+    if mode == 'MinMax':
+        nsd_res = {key: [MinMaxScaling(val, key, d_statistics) for val in CTG_features[key]]
+                   for key in CTG_features.keys()}
+
+    # plot histogram
+    if flag:
+        fig, (ax1, ax2) = plt.subplots(1, 2)
+        fig.suptitle('Histogram - ' + selected_feat[0])
+
+        first_feat_new = nsd_res[selected_feat[0]]
+        ax1.hist(first_feat_new, bins=100)
+        ax1.set(xlabel='Histogram Width', ylabel='Count')
+        ax1.set_title('after ' + mode + ' scaling')
+
+        first_feat = CTG_features[selected_feat[0]]
+
+        ax2.hist(first_feat, bins=100)
+        ax2.set(xlabel='Histogram Width', ylabel='Count')
+        ax2.set_title('before ' + mode + ' scaling')
+
+        fig2, (ax3, ax4) = plt.subplots(1, 2)
+        fig2.suptitle('Histogram - ' + selected_feat[1])
+
+        second_feat_new = nsd_res[selected_feat[1]]
+        ax3.hist(second_feat_new, bins=100)
+        ax3.set(xlabel='Histogram Width', ylabel='Count')
+        ax3.set_title('after ' + mode + ' scaling')
+
+        second_feat = CTG_features[selected_feat[1]]
+
+        ax4.hist(second_feat, bins=100)
+        ax4.set(xlabel='Histogram Width', ylabel='Count')
+        ax4.set_title('before ' + mode + ' scaling')
+
+        plt.show()
     # -------------------------------------------------------------------------
     return pd.DataFrame(nsd_res)
 
 
 ######## Debug
-import os
+# import os
+#
 # directory = r'C:\Users\hadas\Documents\OneDrive - Technion\semester_7\Machine learning in healthcare\Hw\HW1'
-directory = r'C:\Users\Nathan\PycharmProjects\ML_in_Healthcare_Winter2021\HW1'
-CTG_dataset_filname = os.path.join(directory, 'messed_CTG.xls')
-CTG_dataset = pd.read_excel(CTG_dataset_filname, sheet_name='Raw Data').iloc[1:,:]
-CTG_features = CTG_dataset[['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
-                            'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']]
-extra_feature = 'DR'
-CTG_morph = CTG_dataset[['CLASS']]
-fetal_state = CTG_dataset[['NSP']]
+# # directory = r'C:\Users\Nathan\PycharmProjects\ML_in_Healthcare_Winter2021\HW1'
+# CTG_dataset_filname = os.path.join(directory, 'messed_CTG.xls')
+# CTG_dataset = pd.read_excel(CTG_dataset_filname, sheet_name='Raw Data').iloc[1:, :]
+# CTG_features = CTG_dataset[['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
+#                             'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']]
+# extra_feature = 'DR'
+# CTG_morph = CTG_dataset[['CLASS']]
+# fetal_state = CTG_dataset[['NSP']]
+
