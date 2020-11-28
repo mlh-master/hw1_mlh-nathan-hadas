@@ -158,8 +158,9 @@ def norm_standard(CTG_features, selected_feat=('LB', 'ASTV'), mode='none', flag=
 
     # create dictionary for the scaling val:
     nsd_res = {}
-    for key in CTG_features.keys():
-        nsd_res[key] = [val for val in CTG_features[key]]
+    if mode == 'none':
+        nsd_res = {key: [val for val in CTG_features[key]]
+                   for key in CTG_features.keys()}
     if mode == 'mean':
         nsd_res = {key: [MeanNormalization(val, key, d_statistics) for val in CTG_features[key]]
                    for key in CTG_features.keys()}
@@ -174,32 +175,30 @@ def norm_standard(CTG_features, selected_feat=('LB', 'ASTV'), mode='none', flag=
     # plot histogram
     if flag:
         fig, (ax1, ax2) = plt.subplots(1, 2)
-        fig.suptitle('Histogram - ' + selected_feat[0])
+        fig.suptitle(selected_feat[0])
 
-        first_feat_new = nsd_res[selected_feat[0]]
-        ax1.hist(first_feat_new, bins=100)
-        ax1.set(xlabel='Histogram Width', ylabel='Count')
-        ax1.set_title('after ' + mode + ' scaling')
+        first_feat = CTG_features[selected_feat[0]]  # Histogram Before scaling for 1st selected feature
+        ax1.hist(first_feat, bins=100)
+        ax1.set(xlabel='Histogram ' + selected_feat[0], ylabel='Count')
+        ax1.set_title('before ' + mode + ' scaling')
 
-        first_feat = CTG_features[selected_feat[0]]
-
-        ax2.hist(first_feat, bins=100)
-        ax2.set(xlabel='Histogram Width', ylabel='Count')
-        ax2.set_title('before ' + mode + ' scaling')
+        first_feat_new = nsd_res[selected_feat[0]]  # Histogram After scaling for 1st selected feature
+        ax2.hist(first_feat_new, bins=100)
+        ax2.set(xlabel='Histogram ' + selected_feat[0], ylabel='Count')
+        ax2.set_title('after ' + mode + ' scaling')
 
         fig2, (ax3, ax4) = plt.subplots(1, 2)
-        fig2.suptitle('Histogram - ' + selected_feat[1])
+        fig2.suptitle(selected_feat[1])
 
-        second_feat_new = nsd_res[selected_feat[1]]
-        ax3.hist(second_feat_new, bins=100)
-        ax3.set(xlabel='Histogram Width', ylabel='Count')
-        ax3.set_title('after ' + mode + ' scaling')
+        second_feat = CTG_features[selected_feat[1]]  # Histogram Before scaling for 2nd selected feature
+        ax3.hist(second_feat, bins=100)
+        ax3.set(xlabel='Histogram ' + selected_feat[1], ylabel='Count')
+        ax3.set_title('before ' + mode + ' scaling')
 
-        second_feat = CTG_features[selected_feat[1]]
-
-        ax4.hist(second_feat, bins=100)
-        ax4.set(xlabel='Histogram Width', ylabel='Count')
-        ax4.set_title('before ' + mode + ' scaling')
+        second_feat_new = nsd_res[selected_feat[1]]   # Histogram After scaling for 2nd selected feature
+        ax4.hist(second_feat_new, bins=100)
+        ax4.set(xlabel='Histogram ' + selected_feat[1], ylabel='Count')
+        ax4.set_title('after ' + mode + ' scaling')
 
         plt.show()
     # -------------------------------------------------------------------------
@@ -207,15 +206,14 @@ def norm_standard(CTG_features, selected_feat=('LB', 'ASTV'), mode='none', flag=
 
 
 ######## Debug
-# import os
-#
-# directory = r'C:\Users\hadas\Documents\OneDrive - Technion\semester_7\Machine learning in healthcare\Hw\HW1'
-# # directory = r'C:\Users\Nathan\PycharmProjects\ML_in_Healthcare_Winter2021\HW1'
-# CTG_dataset_filname = os.path.join(directory, 'messed_CTG.xls')
-# CTG_dataset = pd.read_excel(CTG_dataset_filname, sheet_name='Raw Data').iloc[1:, :]
-# CTG_features = CTG_dataset[['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
-#                             'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']]
-# extra_feature = 'DR'
-# CTG_morph = CTG_dataset[['CLASS']]
-# fetal_state = CTG_dataset[['NSP']]
+import os
 
+# directory = r'C:\Users\hadas\Documents\OneDrive - Technion\semester_7\Machine learning in healthcare\Hw\HW1'
+directory = r'C:\Users\Nathan\PycharmProjects\ML_in_Healthcare_Winter2021\HW1'
+CTG_dataset_filname = os.path.join(directory, 'messed_CTG.xls')
+CTG_dataset = pd.read_excel(CTG_dataset_filname, sheet_name='Raw Data').iloc[1:, :]
+CTG_features = CTG_dataset[['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
+                            'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']]
+extra_feature = 'DR'
+CTG_morph = CTG_dataset[['CLASS']]
+fetal_state = CTG_dataset[['NSP']]
