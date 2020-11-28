@@ -19,11 +19,13 @@ def pred_log(logreg, X_train, y_train, X_test, flag=False):
     :return: A two elements tuple containing the predictions and the weightning matrix
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
-    # X_train_scaled = nsd(X_train, selected_feat=('LB', 'ASTV'), mode='standard', flag=False)
-    # X_test_scaled = nsd(X_test, mode='standard')
-    # CHECK IF NEED TO STANDARDIZE HERE OR NOT!
     logreg.fit(X_train, y_train)    # fit model to data
-    y_pred_log = logreg.predict(X_test)  # ToDo: ask what kind of predict (predict VS. predict_proba)
+
+    if flag:    # relevant for Q11
+        y_pred_log = logreg.predict_proba(X_test)
+    else:
+        y_pred_log = logreg.predict(X_test)
+
     w_log = logreg.coef_
 
     # -------------------------------------------------------------------------
@@ -89,7 +91,26 @@ def cv_kfold(X, y, C, penalty, K, mode):
             for train_idx, val_idx in kf.split(X, y):
                 x_train, x_val = X.iloc[train_idx], X.iloc[val_idx]
         # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
+                y_train, y_val = y[train_idx], y[val_idx]
 
+                # First we scaled our training and validation data (for each fold)
+                x_train = nsd(x_train, mode=mode)
+                x_val = nsd(x_val, mode=mode)
+
+                # fitting the model
+                logreg.fit(x_train, y_train)
+
+                # Predicting y probabilities for validation segment (based on fitted model)
+                y_val_pred, _ = pred_log(logreg, x_train, y_train, x_val, flag=True)
+
+                # Calculates the loss
+                loss_val_vec[k] = log_loss(y_val, y_val_pred)
+
+                k += 1
+
+            mu = np.mean(loss_val_vec)
+            std = loss_val_vec.std()
+            validation_dict += [{'C': c, 'penalty': p, 'mu': mu, 'sigma': std}]
         # --------------------------------------------------------------------------
     return validation_dict
 
@@ -114,3 +135,35 @@ def odds_ratio(w, X, selected_feat='LB'):
     # --------------------------------------------------------------------------
 
     return odds, odd_ratio
+
+
+
+####### Debug
+# import os
+# import pickle
+# from sklearn import metrics
+# from sklearn.model_selection import train_test_split
+# from sklearn.linear_model import LogisticRegression
+# from lin_classifier import *
+#
+#
+# with open('objs.pkl', 'rb') as f:
+#     CTG_features, CTG_morph, fetal_state = pickle.load(f)
+# orig_feat = CTG_features.columns.values
+# X_train, X_test, y_train, y_test = train_test_split(CTG_features, np.ravel(fetal_state), test_size=0.2, random_state=0, stratify=np.ravel(fetal_state))
+# logreg = LogisticRegression(solver='saga', multi_class='ovr', penalty='none', max_iter=10000)
+# y_pred, w = pred_log(logreg, X_train, y_train, X_test)
+#
+# print("Accuracy is: " + str("{0:.2f}".format(100 * metrics.accuracy_score(y_test, y_pred))) + "%")
+# print("F1 score is: " + str("{0:.2f}".format(100 * metrics.f1_score(y_test, y_pred, average='macro'))) + "%")
+#
+#
+# directory = r'C:\Users\Nathan\PycharmProjects\ML_in_Healthcare_Winter2021\HW1'
+# # CTG_dataset_filname = os.path.join(directory, 'messed_CTG.xls')
+# # CTG_dataset = pd.read_excel(CTG_dataset_filname, sheet_name='Raw Data').iloc[1:, :]
+# # CTG_features = CTG_dataset[['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
+# #                             'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']]
+# # extra_feature = 'DR'
+# # CTG_morph = CTG_dataset[['CLASS']]
+# # fetal_state = CTG_dataset[['NSP']]
+

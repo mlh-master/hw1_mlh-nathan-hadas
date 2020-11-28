@@ -204,16 +204,3 @@ def norm_standard(CTG_features, selected_feat=('LB', 'ASTV'), mode='none', flag=
     # -------------------------------------------------------------------------
     return pd.DataFrame(nsd_res)
 
-
-######## Debug
-import os
-
-# directory = r'C:\Users\hadas\Documents\OneDrive - Technion\semester_7\Machine learning in healthcare\Hw\HW1'
-directory = r'C:\Users\Nathan\PycharmProjects\ML_in_Healthcare_Winter2021\HW1'
-CTG_dataset_filname = os.path.join(directory, 'messed_CTG.xls')
-CTG_dataset = pd.read_excel(CTG_dataset_filname, sheet_name='Raw Data').iloc[1:, :]
-CTG_features = CTG_dataset[['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
-                            'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']]
-extra_feature = 'DR'
-CTG_morph = CTG_dataset[['CLASS']]
-fetal_state = CTG_dataset[['NSP']]
