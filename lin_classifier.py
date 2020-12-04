@@ -126,7 +126,7 @@ def odds_ratio(w, X, selected_feat='LB'):
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
     idx = list(X.keys()).index(selected_feat)
-    log_odds = np.dot(w[:, idx].reshape(-1, 1), X[selected_feat].to_numpy().reshape(1, -1))
+    log_odds = np.dot(w, X.to_numpy().transpose())
     odds = np.median(np.exp(log_odds[0, :]))
 
     w_selected_feat = w[:, idx]
@@ -138,32 +138,4 @@ def odds_ratio(w, X, selected_feat='LB'):
 
 
 
-####### Debug
-# import os
-# import pickle
-# from sklearn import metrics
-# from sklearn.model_selection import train_test_split
-# from sklearn.linear_model import LogisticRegression
-# from lin_classifier import *
-#
-#
-# with open('objs.pkl', 'rb') as f:
-#     CTG_features, CTG_morph, fetal_state = pickle.load(f)
-# orig_feat = CTG_features.columns.values
-# X_train, X_test, y_train, y_test = train_test_split(CTG_features, np.ravel(fetal_state), test_size=0.2, random_state=0, stratify=np.ravel(fetal_state))
-# logreg = LogisticRegression(solver='saga', multi_class='ovr', penalty='none', max_iter=10000)
-# y_pred, w = pred_log(logreg, X_train, y_train, X_test)
-#
-# print("Accuracy is: " + str("{0:.2f}".format(100 * metrics.accuracy_score(y_test, y_pred))) + "%")
-# print("F1 score is: " + str("{0:.2f}".format(100 * metrics.f1_score(y_test, y_pred, average='macro'))) + "%")
-#
-#
-# directory = r'C:\Users\Nathan\PycharmProjects\ML_in_Healthcare_Winter2021\HW1'
-# # CTG_dataset_filname = os.path.join(directory, 'messed_CTG.xls')
-# # CTG_dataset = pd.read_excel(CTG_dataset_filname, sheet_name='Raw Data').iloc[1:, :]
-# # CTG_features = CTG_dataset[['LB', 'AC', 'FM', 'UC', 'DL', 'DS', 'DR', 'DP', 'ASTV', 'MSTV', 'ALTV', 'MLTV',
-# #                             'Width', 'Min', 'Max', 'Nmax', 'Nzeros', 'Mode', 'Mean', 'Median', 'Variance', 'Tendency']]
-# # extra_feature = 'DR'
-# # CTG_morph = CTG_dataset[['CLASS']]
-# # fetal_state = CTG_dataset[['NSP']]
 

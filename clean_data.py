@@ -42,7 +42,7 @@ def nan2num_samp(CTG_features, extra_feature):
     # create a dictionary without nan values:
     c_ctg = rm_ext_and_nan(CTG_features, extra_feature)
 
-    # create a dictionary with random values (from relevant distribution p) instead of NaN
+    # create a dictionary with random values (from relevant distribution p of each feature) instead of NaN:
     for key in c_ctg.keys():
         # # calculate the probability of each element
         p_dict = {val: (c_ctg[key].count(val) / len(c_ctg[key])) for val in c_ctg[key]}
